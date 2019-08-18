@@ -4,7 +4,9 @@
 
 
 #include "VideoChannel.h"
-VideoChannel::VideoChannel(int id,AVCodecContext* codecContext):BaseChannel(id,codecContext) {}
+VideoChannel::VideoChannel(int id,AVCodecContext* codecContext,int fps):BaseChannel(id,codecContext) {
+    this->fps = fps;
+}
 
 VideoChannel::~VideoChannel() {}
 
@@ -65,6 +67,14 @@ void VideoChannel::video_decode() {
         }else if(ret){//ret != 0
             break;
         }
+        /**
+         * 内存泄露点2
+         * 控制 frames 队列
+         */
+        while(isPlaying && frames.size()>100){
+            av_usleep(10*1000);
+            continue;
+        }
         //ret==0 数据收发正常，成功获取到解码后的视频原始数据包AVFrame，格式是yuv
         frames.push(frame);
     }
@@ -91,6 +101,9 @@ void VideoChannel::video_play() {
     //  给dst_data 和 dst_linesize 申请内存
     av_image_alloc(dst_data,dst_linesize,
             codecContext->width,codecContext->height,AV_PIX_FMT_RGBA,1);
+    //根据fps（传入流的的平均帧率来控制每一帧的延时时间）
+    //sleep : fps > time(单位是秒)
+    double delay_time_per_frame = 1.0/fps;
     while(isPlaying){
         int ret = frames.pop(frame);
         if(!isPlaying){
@@ -103,6 +116,10 @@ void VideoChannel::video_play() {
         //取到yuv原始数据包，下面要进行数据转换        dst_data:AV_PIX_FMT_RGBA格式里的数据
         sws_scale(sws_context,frame->data,
                 frame->linesize,0,codecContext->height,dst_data,dst_linesize);
+        //进行休眠 每一帧还有自己的额外延时时间 （怎么获取额外延时时间公式? 点进去frame->repeat_pict看注释）
+        double extra_delay = frame->repeat_pict / (2* fps);
+        double real_delay = extra_delay+ delay_time_per_frame;
+        av_usleep(real_delay * 1000000);
         //渲染，回调回去 > native-lib
         //渲染一副图像需要什么信息：（宽高》图像的尺寸）（图像的内容（数据）怎么画）
         //需要：1 data 2 linesize 3 width 4 height

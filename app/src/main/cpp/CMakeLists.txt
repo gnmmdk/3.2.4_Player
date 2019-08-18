@@ -16,4 +16,5 @@ target_link_libraries(
         log
         z
         android
+        OpenSLES
 )

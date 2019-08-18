@@ -11,6 +11,7 @@
 extern "C"{
 #include <libavcodec/avcodec.h>
 #include <libavutil/frame.h>
+#include <libavutil/time.h>
 };
 
 class BaseChannel{
@@ -49,7 +50,7 @@ public:
     SafeQueue<AVPacket *> packets;
     SafeQueue<AVFrame *> frames;
     int isPlaying;
-    AVCodecContext *codecContext;
+    AVCodecContext *codecContext;//TODO 没释放
 };
 
 #endif //INC_3_2_4_PLAYER_BASECHANNEL_H

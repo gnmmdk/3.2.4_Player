@@ -16,7 +16,7 @@ typedef void (*RenderCallback)(uint8_t *,int,int,int);
 
 class VideoChannel : public BaseChannel{
 public:
-    VideoChannel(int i,AVCodecContext *codecContext);
+    VideoChannel(int i,AVCodecContext *codecContext,int fps);
 
     ~VideoChannel();
 
@@ -33,6 +33,7 @@ private:
     pthread_t pid_video_decode;
     pthread_t pid_video_play;
     RenderCallback  renderCallback;
+    int fps;
 };
 
 

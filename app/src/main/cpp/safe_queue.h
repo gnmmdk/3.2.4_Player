@@ -16,10 +16,12 @@ class SafeQueue{
     typedef void(*ReleaseCallback)(T*);
 public:
     SafeQueue(){
-
+        pthread_mutex_init(&mutex,0);//动态初始化
+        pthread_cond_init(&cond,0);
     }
     ~SafeQueue(){
-
+        pthread_mutex_destroy(&mutex);
+        pthread_cond_destroy(&cond);
     }
     /**
      * 入队
