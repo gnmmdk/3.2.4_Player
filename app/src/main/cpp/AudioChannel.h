@@ -14,7 +14,7 @@ extern "C"{
 
 class AudioChannel : public BaseChannel {
 public:
-    AudioChannel(int id,AVCodecContext *codecContext);
+    AudioChannel(int id,AVCodecContext *codecContext,AVRational time_base);
 
     ~AudioChannel();
 
@@ -35,14 +35,20 @@ public:
     int out_buffers_size;
 
 private:
+    SwrContext* swr_context = 0;
     pthread_t pid_audio_decode;
     pthread_t pid_audio_play;
-
+    //引擎
     SLObjectItf engineObject;
+    //引擎接口
     SLEngineItf engineInterface;
+    //混音器
     SLObjectItf outputMixObject;
+    //播放器
     SLObjectItf bqPlayerObject;
+    //播放器接口
     SLPlayItf bqPlayerPlay;
+    //播放器队列接口
     SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue;
 };
 

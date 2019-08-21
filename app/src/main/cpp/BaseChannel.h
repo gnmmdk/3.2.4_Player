@@ -16,7 +16,7 @@ extern "C"{
 
 class BaseChannel{
 public:
-    BaseChannel(int id,AVCodecContext *codecContext):id(id),codecContext(codecContext){
+    BaseChannel(int id,AVCodecContext *codecContext,AVRational time_base):id(id),codecContext(codecContext),time_base(time_base){
         packets.setReleaseCallback(releaseAVPacket);
         frames.setReleaseCallback(releaseAVFrame);
     }
@@ -51,6 +51,9 @@ public:
     SafeQueue<AVFrame *> frames;
     int isPlaying;
     AVCodecContext *codecContext;//TODO 没释放
+
+    AVRational time_base;
+    double audio_time;
 };
 
 #endif //INC_3_2_4_PLAYER_BASECHANNEL_H

@@ -4,7 +4,7 @@
 
 
 #include "VideoChannel.h"
-VideoChannel::VideoChannel(int id,AVCodecContext* codecContext,int fps):BaseChannel(id,codecContext) {
+VideoChannel::VideoChannel(int id,AVCodecContext* codecContext,AVRational time_base,int fps):BaseChannel(id,codecContext,time_base) {
     this->fps = fps;
 }
 
@@ -135,3 +135,9 @@ void VideoChannel::video_play() {
 void VideoChannel::setRenderCallback(RenderCallback renderCallback) {
     this->renderCallback = renderCallback;
 }
+
+void VideoChannel::setAudioChannel(AudioChannel *audioChannel) {
+    this->audioChannel = audioChannel;
+}
+
+
