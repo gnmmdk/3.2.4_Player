@@ -20,7 +20,8 @@ public class MainActivity extends AppCompatActivity {
         player = new NEPlayer();
         player.setSurfaceView(surfaceView);
 //        player.setDataSource(new File("/sdcard/","demo.mp4").getAbsolutePath());
-        player.setDataSource(new File("/sdcard/","input.mp4").getAbsolutePath());
+//        player.setDataSource(new File("/sdcard/","input.mp4").getAbsolutePath());
+        player.setDataSource(new File("/sdcard/","eat.mkv").getAbsolutePath());
         player.setOnPreparedListener(new NEPlayer.OnpreparedListener() {
             @Override
             public void onPrepared() {

@@ -11,11 +11,11 @@
  */
 void dropAVPakcet(queue<AVPacket *> &q){
     while(!q.empty()){
-        AVPacket *aVpacket = q.front();
+        AVPacket *avPacket = q.front();
         //I帧、B帧、P帧
         //不能丢I帧，AV_PKT_FLAG_KEY:I帧（关键帧）
-        if(aVpacket->flags != AV_PKT_FLAG_KEY){
-            BaseChannel::releaseAVPacket(&aVpacket);
+        if(avPacket->flags != AV_PKT_FLAG_KEY){
+            BaseChannel::releaseAVPacket(&avPacket);
             q.pop();
         }else{
             break;
@@ -186,10 +186,10 @@ void VideoChannel::video_play() {
                     frames.sync();
                     continue;
                 }
-                av_usleep(real_delay  * 1000000);
+//                av_usleep(real_delay  * 1000000);
             }else{
                 LOGE("音视频完美同步！");
-                av_usleep(real_delay  * 1000000);
+//                av_usleep(real_delay  * 1000000);
             }
         }
 

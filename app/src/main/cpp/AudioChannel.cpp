@@ -84,6 +84,10 @@ void AudioChannel::audio_decode() {
         } else if(ret != 0){
             break;
         }
+        /**
+    * 内存泄漏点2
+    * 控制 frames 队列
+    */
         while(isPlaying && frames.size() > 100){
             av_usleep(10*1000);
             continue;
@@ -203,7 +207,15 @@ void AudioChannel::audio_play() {
 int AudioChannel::getPCM() {
     int pcm_data_size = 0;
     AVFrame* frame = 0 ;
-    //TODO  视频
+    /**
+     * 内存泄漏点
+     */
+//    SwrContext *swrContext = swr_alloc_set_opts(0, AV_CH_LAYOUT_STEREO, AV_SAMPLE_FMT_S16,
+//                                                out_sampleRate, codecContext->channel_layout,
+//                                                codecContext->sample_fmt, codecContext->sample_rate,
+//                                                0, 0);
+//    //初始化重采样上下文
+//    swr_init(swrContext);
 
     while(isPlaying){
         int ret = frames.pop(frame);
@@ -214,7 +226,7 @@ int AudioChannel::getPCM() {
             //取数据包失败
             continue;
         }
-        LOGE("音频播放中");
+//        LOGE("音频播放中");
         //pcm数据在frame中
         //这里获得的解码后pcm格式音频原始数据，有可能与创建的播放器中设置的pcm格式不一样
         //假设输入10个数据，有可能这次转换只转换了8个，还剩2个数据（delay）
