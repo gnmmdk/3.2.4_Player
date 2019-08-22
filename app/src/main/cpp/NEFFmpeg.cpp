@@ -178,6 +178,10 @@ void NEFFmpeg::_start() {
             //要考虑读完了，是否播放完的情况
         }else{
             //LOGE("读取音视频数据包失败");
+            LOGE("读取音视频数据包失败");
+            if (javaCallHelper) {
+                javaCallHelper->onError(THREAD_CHILD, ERROR_READ_PACKETS_FAIL);
+            }
             break;
         }
     }//end while

@@ -19,8 +19,8 @@ public class MainActivity extends AppCompatActivity {
         surfaceView = findViewById(R.id.surfaceView);
         player = new NEPlayer();
         player.setSurfaceView(surfaceView);
-        player.setDataSource(new File("/sdcard/","demo.mp4").getAbsolutePath());
-//        player.setDataSource(new File("/sdcard/","input.mp4").getAbsolutePath());
+//        player.setDataSource(new File("/sdcard/","demo.mp4").getAbsolutePath());
+        player.setDataSource(new File("/sdcard/","input.mp4").getAbsolutePath());
         player.setOnPreparedListener(new NEPlayer.OnpreparedListener() {
             @Override
             public void onPrepared() {

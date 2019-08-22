@@ -14,6 +14,7 @@ using namespace std;
 template <typename T>
 class SafeQueue{
     typedef void(*ReleaseCallback)(T*);
+    typedef void(*SyncHandle)(queue<T> &);
 public:
     SafeQueue(){
         pthread_mutex_init(&mutex,0);//动态初始化
@@ -96,11 +97,25 @@ public:
         this->releaseCallback = releaseCallback;
     }
 
+    void setSyncHandle(SyncHandle syncHandle1){
+        this->syncHandle = syncHandle1;
+    }
+    /**
+         * 同步操作
+         * 丢包
+         */
+    void sync(){
+        pthread_mutex_lock(&mutex);
+        syncHandle(q);
+        pthread_mutex_unlock(&mutex);
+    }
+
 private:
     queue<T> q;
     pthread_mutex_t mutex;
     pthread_cond_t cond;
     int work;//标记队列是否在工作
     ReleaseCallback releaseCallback;
+    SyncHandle syncHandle;
 };
 #endif //INC_3_2_4_PLAYER_SAFE_QUEUE_H

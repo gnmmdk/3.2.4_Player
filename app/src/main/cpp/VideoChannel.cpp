@@ -4,8 +4,40 @@
 
 
 #include "VideoChannel.h"
+
+/**
+ * 丢包AVPacket
+ * @param q
+ */
+void dropAVPakcet(queue<AVPacket *> &q){
+    while(!q.empty()){
+        AVPacket *aVpacket = q.front();
+        //I帧、B帧、P帧
+        //不能丢I帧，AV_PKT_FLAG_KEY:I帧（关键帧）
+        if(aVpacket->flags != AV_PKT_FLAG_KEY){
+            BaseChannel::releaseAVPacket(&aVpacket);
+            q.pop();
+        }else{
+            break;
+        }
+    }
+}
+
+/**
+ * 丢包AVFrame
+ * @param q
+ */
+void dropAVFrame(queue<AVFrame *> &q){
+    if(!q.empty()){
+        AVFrame * avFrame = q.front();
+        BaseChannel::releaseAVFrame(&avFrame);
+        q.pop();
+    }
+}
 VideoChannel::VideoChannel(int id,AVCodecContext* codecContext,AVRational time_base,int fps):BaseChannel(id,codecContext,time_base) {
     this->fps = fps;
+    packets.setSyncHandle(dropAVPakcet);
+    frames.setSyncHandle(dropAVFrame);
 }
 
 VideoChannel::~VideoChannel() {}
@@ -119,7 +151,49 @@ void VideoChannel::video_play() {
         //进行休眠 每一帧还有自己的额外延时时间 （怎么获取额外延时时间公式? 点进去frame->repeat_pict看注释）
         double extra_delay = frame->repeat_pict / (2* fps);
         double real_delay = extra_delay+ delay_time_per_frame;
-        av_usleep(real_delay * 1000000);
+
+        //根据音频的播放时间来判断
+        //获取视频的播放时间
+        double video_time = frame->best_effort_timestamp * av_q2d(time_base);
+
+        //音视频同步：永远都是你追我赶的状态。
+        if(!audioChannel){
+            //没有音频（类似GIF）
+            av_usleep(real_delay * 1000000);
+        } else{
+            double audioTime = audioChannel->audio_time;
+            //音视频时间差
+            double time_diff = video_time-audioTime;
+            if(time_diff >0 ){
+                LOGE("视频比音频快:%lf",time_diff);
+                //视频比音频快：等音频（sleep）
+                //自然状态下，time_diff的值不会很大
+                //但是，seek后time_diff的值可能会很大，导致视频休眠天就
+                //av_usleep((real_delay + time_diff) * 1000000);//TODO seek后测试
+                if(time_diff >1){
+                    av_usleep((real_delay * 2 ) * 1000000);
+                }else{
+                    av_usleep((real_delay + time_diff) * 1000000);
+                }
+            }else if(time_diff<0){
+                LOGE("音频比视频快: %lf", fabs(time_diff));//fabs绝对值
+                //音频比视频快：追音频（尝试丢视频包）
+                //视频包：packets和frames
+                if(fabs(time_diff)>=0.05){
+                    //时间差如果大于0.05，有明显的延迟感
+                    //丢包：要操作队列中数据！一定要小心！
+//                    packets.sync();
+                    frames.sync();
+                    continue;
+                }
+                av_usleep(real_delay  * 1000000);
+            }else{
+                LOGE("音视频完美同步！");
+                av_usleep(real_delay  * 1000000);
+            }
+        }
+
+
         //渲染，回调回去 > native-lib
         //渲染一副图像需要什么信息：（宽高》图像的尺寸）（图像的内容（数据）怎么画）
         //需要：1 data 2 linesize 3 width 4 height

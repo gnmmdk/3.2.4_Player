@@ -6,7 +6,7 @@
 #include "AudioChannel.h"
 #include "macro.h"
 AudioChannel::AudioChannel(int id,AVCodecContext *codecContext,AVRational time_base) : BaseChannel(id,codecContext,time_base) {
-    //缓冲区大 小
+    //缓冲区大小
     out_channels = av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO);
     out_sampleSize = av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
     out_sampleRate = 44100;

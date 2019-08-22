@@ -12,6 +12,7 @@ extern "C"{
 
 #include "BaseChannel.h"
 #include "AudioChannel.h"
+#include "macro.h"
 
 typedef void (*RenderCallback)(uint8_t *,int,int,int);
 
