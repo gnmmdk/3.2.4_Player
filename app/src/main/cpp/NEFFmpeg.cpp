@@ -152,7 +152,7 @@ void NEFFmpeg::start() {
 void NEFFmpeg::_start() {
     while(isPlaying){
         /**
-         * 内存泄露点1
+         * 内存泄漏点1
          * 控制packets队列
          */
         if(videoChannel && videoChannel->packets.size()> 100){
