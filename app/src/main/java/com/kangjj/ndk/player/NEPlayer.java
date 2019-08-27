@@ -53,11 +53,6 @@ public class NEPlayer {
         startNative();
     }
 
-    private native void startNative();
-
-    private native void prepareNative(String dataSource);
-
-
     public void setSurfaceView(SurfaceView surfaceView) {
         if(surfaceHolder!=null){
             surfaceHolder.removeCallback(mCallback);
@@ -82,6 +77,24 @@ public class NEPlayer {
 
         }
     };
+
+    public void release() {
+        surfaceHolder.removeCallback(mCallback);
+        releaseNative();
+    }
+
+
+    public void stop() {
+        stopNative();
+    }
+
+    private native void stopNative();
+
+    private native void startNative();
+
+    private native void prepareNative(String dataSource);
+
+    private native void releaseNative();
 
     private native void setSurfaceNative(Surface surface);
 

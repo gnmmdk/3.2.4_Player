@@ -40,7 +40,9 @@ VideoChannel::VideoChannel(int id,AVCodecContext* codecContext,AVRational time_b
     frames.setSyncHandle(dropAVFrame);
 }
 
-VideoChannel::~VideoChannel() {}
+VideoChannel::~VideoChannel() {
+
+}
 
 void* task_video_decode(void* args){
     VideoChannel * videoChannel = static_cast<VideoChannel *>(args);
@@ -65,6 +67,12 @@ void VideoChannel::start() {
 }
 
 void VideoChannel::stop() {
+    isPlaying = 0 ;
+    //TODO javaCallHelper = 0;
+    packets.setWork(0);
+    frames.setWork(0);
+    pthread_join(pid_video_decode,0);
+    pthread_join(pid_video_play,0);
 
 }
 
@@ -165,7 +173,7 @@ void VideoChannel::video_play() {
             //音视频时间差
             double time_diff = video_time-audioTime;
             if(time_diff >0 ){
-                LOGE("视频比音频快:%lf",time_diff);
+                /*LOGE("视频比音频快:%lf",time_diff);*/
                 //视频比音频快：等音频（sleep）
                 //自然状态下，time_diff的值不会很大
                 //但是，seek后time_diff的值可能会很大，导致视频休眠天就
@@ -176,7 +184,7 @@ void VideoChannel::video_play() {
                     av_usleep((real_delay + time_diff) * 1000000);
                 }
             }else if(time_diff<0){
-                LOGE("音频比视频快: %lf", fabs(time_diff));//fabs绝对值
+                /*LOGE("音频比视频快: %lf", fabs(time_diff));//fabs绝对值*/
                 //音频比视频快：追音频（尝试丢视频包）
                 //视频包：packets和frames
                 if(fabs(time_diff)>=0.05){

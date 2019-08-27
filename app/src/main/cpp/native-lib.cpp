@@ -88,3 +88,23 @@ Java_com_kangjj_ndk_player_NEPlayer_setSurfaceNative(JNIEnv *env, jobject instan
     pthread_mutex_unlock(&mutex);
 
 }
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_kangjj_ndk_player_NEPlayer_releaseNative(JNIEnv *env, jobject instance) {
+
+    pthread_mutex_lock(&mutex);
+    if(window){
+        ANativeWindow_release(window);
+        window = 0 ;
+    }
+    pthread_mutex_unlock(&mutex);
+    DELETE(ffmpeg);
+
+}extern "C"
+JNIEXPORT void JNICALL
+Java_com_kangjj_ndk_player_NEPlayer_stopNative(JNIEnv *env, jobject instance) {
+    if(ffmpeg){
+        ffmpeg->stop();
+    }
+
+}

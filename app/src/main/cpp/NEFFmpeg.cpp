@@ -33,6 +33,32 @@ void* task_start(void* args){
     return 0;
 }
 
+//要访问ffmpeg的私有属性，还可以设置为友元函数
+void * task_stop(void* args){
+    NEFFmpeg* ffmpeg = static_cast<NEFFmpeg *>(args);
+    ffmpeg->isPlaying = 0 ;
+    //解决了：要保证_prepare方法执行完再释放的问题。
+    // 假如是直播，这里可能阻塞住 int ret = avformat_open_input(&formatContext, dataSource, 0, &dictionary);
+    pthread_join(ffmpeg->pid_prepare,0);
+
+    //要保证_prepare方法执行完再释放,所以上方用了pthread_join
+    if(ffmpeg->formatContext){
+        avformat_close_input(&ffmpeg->formatContext);
+        avformat_free_context(ffmpeg->formatContext);
+        ffmpeg->formatContext = 0 ;
+    }
+    if(ffmpeg->videoChannel){
+        ffmpeg->videoChannel->stop();
+    }
+    if(ffmpeg->audioChannel){
+        ffmpeg->audioChannel->stop();
+    }
+    DELETE(ffmpeg->videoChannel);
+    DELETE(ffmpeg->audioChannel);
+//    DELETE(ffmpeg);//TODO ??
+    return 0;
+}
+
 void NEFFmpeg::_prepare() {
     //0.5 AVFormatContext **ps
     formatContext = avformat_alloc_context();
@@ -159,6 +185,10 @@ void NEFFmpeg::_start() {
             av_usleep(10*1000);     //睡眠十毫秒
             continue;
         }
+        if(audioChannel && audioChannel->packets.size() >100){
+            av_usleep(10*1000);
+            continue;
+        }
         //7_1 给AVPacket分配内存空间
         AVPacket *packet = av_packet_alloc();
         //7_2 从媒体中读取音/视频报
@@ -192,4 +222,14 @@ void NEFFmpeg::_start() {
 
 void NEFFmpeg::setRenderCallback(RenderCallback renderCallback) {
     this->renderCallback = renderCallback;
+}
+
+void NEFFmpeg::stop() {
+    javaCallHelper = 0 ;//防止prepare阻塞中停止了，还是会回调给java
+    //要保证_prepare方法（子线程中）执行完再释放（在主线程）
+    //pthread_join ：这里调用了后会阻塞主线程，可能引发ANR 所以开个线程去释放
+//    isPlaying = 0;
+//    pthread_join(pid_prepare, 0);//解决了：要保证_prepare方法（子线程中）执行完再释放（在主线程）的问题
+    //在主线程会引发ANR，那么到子线程中去释放
+    pthread_create(&pid_stop,0,task_stop,this);
 }

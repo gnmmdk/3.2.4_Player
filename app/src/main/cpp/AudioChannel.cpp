@@ -52,7 +52,42 @@ void AudioChannel::start() {
 }
 
 void AudioChannel::stop() {
+    isPlaying = 0 ;
+    //TODO javaCallHelper
+    packets.setWork(0);
+    frames.setWork(0);
+    pthread_join(pid_audio_decode,0);
+    pthread_join(pid_audio_play,0);
+    if(swr_context){
+        swr_free(&swr_context);
+        swr_context = 0;
+    }
 
+    /**
+     * 7、释放
+     */
+     //7.1 设置播放器状态为停止状态
+    if (bqPlayerPlay) {
+        (*bqPlayerPlay)->SetPlayState(bqPlayerPlay, SL_PLAYSTATE_STOPPED);
+        bqPlayerPlay= 0;
+    }
+     //7.2 销毁播放器
+    if (bqPlayerObject) {
+        (*bqPlayerObject)->Destroy(bqPlayerObject);
+        bqPlayerObject = 0;
+        bqPlayerBufferQueue = 0;
+    }
+     //7.3 销毁混音器
+    if (outputMixObject) {
+        (*outputMixObject)->Destroy(outputMixObject);
+        outputMixObject = 0;
+    }
+     //7.4 销毁引擎
+    if (engineObject) {
+        (*engineObject)->Destroy(engineObject);
+        engineObject = 0;
+        engineInterface = 0;
+    }
 }
 /**
  * 音频解码与视频一样

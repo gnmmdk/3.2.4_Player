@@ -22,9 +22,15 @@ public:
     }
     //虚函数是指一个类中你希望重载的成员函数，当你用一个基类指针或引用指向一个继承对象的时候，
 //    调用一个虚函数时，实际调用的是继承类的版本。
-    virtual ~BaseChannel(){
+    virtual ~BaseChannel() {//NEFFmpeg 会调用删除，所以这里会调用到
         packets.clear();
         frames.clear();
+
+        if(codecContext){
+            avcodec_close(codecContext);
+            avcodec_free_context(&codecContext);
+            codecContext = 0 ;
+        }
     }
 
     static void releaseAVPacket(AVPacket **packet){//这里的T表示AVPacket* 所以需要传入AVPacket**
@@ -50,7 +56,7 @@ public:
     SafeQueue<AVPacket *> packets;
     SafeQueue<AVFrame *> frames;
     int isPlaying;
-    AVCodecContext *codecContext;//TODO 没释放
+    AVCodecContext *codecContext;
 
     AVRational time_base;
     double audio_time;
