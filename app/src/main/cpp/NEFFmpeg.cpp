@@ -13,11 +13,13 @@ NEFFmpeg::NEFFmpeg(JavaCallHelper *javaCallHelper, char *dataSource) {
 //java:"hello" c字符串以\0 结尾:"hello\0"
     this->dataSource = new char[strlen(dataSource) + 1];
     strcpy(this->dataSource, dataSource);
+    pthread_mutex_init(&seekMutex,0);
 }
 
 NEFFmpeg::~NEFFmpeg() {
     DELETE(dataSource);
     DELETE(javaCallHelper);
+    pthread_mutex_destroy(&seekMutex);
 }
 
 void *task_prepare(void *args) {
@@ -245,4 +247,47 @@ void NEFFmpeg::stop() {
 
 int NEFFmpeg::getDuration() const{
     return duration;
+}
+
+void NEFFmpeg::seekTo(int playProgress) {
+    if(playProgress<0 || playProgress > duration){
+        return;
+    }
+    if(!audioChannel && !videoChannel){
+        return;
+    }
+    if(!formatContext){
+        return;
+    }
+    pthread_mutex_lock(&seekMutex);
+    //1 上下文 2 流索引，（-1：表示选择的是默认流） 3要seek到的时间戳，4 seek的方式
+    // AVSEEK_FLAG_BACKWAR 表示seek到请求的时间戳之前的最靠近的一个关键帧
+    // AVSEEK_FLAG_BYTE 基于字节位置seek
+    // AVSEEK_FLAG_ANY  任意帧（可能不是关键帧,会花屏）
+    //AVSEEK_FLAG_FRAME 基于帧数seek
+    int ret = av_seek_frame(formatContext,-1,playProgress * AV_TIME_BASE,AVSEEK_FLAG_BACKWARD);
+    if(ret<0){
+        if(javaCallHelper){
+            javaCallHelper->onError(THREAD_CHILD,ERROR_SEEK_TO);
+        }
+        return;
+    }
+    if(audioChannel){
+        audioChannel->packets.setWork(0);
+        audioChannel->frames.setWork(0);
+        audioChannel->packets.clear();
+        audioChannel->frames.clear();
+        audioChannel->packets.setWork(1);
+        audioChannel->frames.setWork(1);
+    }
+
+    if(videoChannel){
+        videoChannel->packets.setWork(0);
+        videoChannel->frames.setWork(0);
+        videoChannel->packets.clear();
+        videoChannel->frames.clear();
+        videoChannel->packets.setWork(1);
+        videoChannel->frames.setWork(1);
+    }
+    pthread_mutex_unlock(&seekMutex);
 }

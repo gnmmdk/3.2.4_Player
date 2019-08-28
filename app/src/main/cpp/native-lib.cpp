@@ -117,3 +117,12 @@ Java_com_kangjj_ndk_player_NEPlayer_getDurationNative(JNIEnv *env, jobject insta
     }
     return 0;
 }
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_kangjj_ndk_player_NEPlayer_seekToNative(JNIEnv *env, jobject instance, jint playProgress) {
+
+    if(ffmpeg){
+        ffmpeg->seekTo(playProgress);
+    }
+
+}

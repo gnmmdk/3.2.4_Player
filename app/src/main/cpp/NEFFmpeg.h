@@ -37,6 +37,8 @@ public:
 
     int getDuration() const;
 
+    void seekTo(int playProgress);
+
 private:
     JavaCallHelper *javaCallHelper = 0;
     AudioChannel *audioChannel = 0;
@@ -49,6 +51,7 @@ private:
     AVFormatContext *formatContext = 0;
     RenderCallback renderCallback;
     int duration;
+    pthread_mutex_t seekMutex;
 };
 
 

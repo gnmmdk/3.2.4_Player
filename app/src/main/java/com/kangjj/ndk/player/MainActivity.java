@@ -58,7 +58,6 @@ public class MainActivity extends AppCompatActivity {
         player.setOnProgressListener(new NEPlayer.OnProgressListener() {
             @Override
             public void onProgress(final int progress) {
-                Log.e(TAG,"progress="+progress);
                 if(!isTouch){
                     runOnUiThread(new Runnable() {
                         @Override
@@ -89,6 +88,28 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                isTouch = true;
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                isSeek = true;
+                isTouch = false;
+                int seekBarProgress = seekBar.getProgress();
+                int duration = player.getDuration();
+                int playProgress = seekBarProgress * duration/100;
+                //将播放进度传给底层ffmepg av_seek_frame
+                player.seekTo(playProgress);
+            }
+        });
     }
 
     public void onPrepare(View view) {

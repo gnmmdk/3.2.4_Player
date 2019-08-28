@@ -37,6 +37,9 @@ public class NEPlayer {
     //读取媒体数据包失败
     public static final int FFMPEG_READ_PACKETS_FAIL = (ERROR_CODE_FFMPEG_PLAY - 1);
 
+    //seek错误
+    public static final int FFMPEG_SEEK_TO_FAIL = (ERROR_CODE_FFMPEG_PLAY - 2);
+
     //直播地址或媒体文件路径
     private String dataSource;
     private SurfaceHolder surfaceHolder;
@@ -92,6 +95,21 @@ public class NEPlayer {
     public int getDuration() {
         return getDurationNative();
     }
+
+    /**
+     * 播放进度条跳转
+     * @param playProgress
+     */
+    public void seekTo(final int playProgress) {
+        new Thread(){
+            @Override
+            public void run() {
+                seekToNative(playProgress);
+            }
+        }.start();
+    }
+
+    private native void seekToNative(int playProgress);
 
     private native int getDurationNative();
 
