@@ -36,26 +36,30 @@ void* task_start(void* args){
 //要访问ffmpeg的私有属性，还可以设置为友元函数
 void * task_stop(void* args){
     NEFFmpeg* ffmpeg = static_cast<NEFFmpeg *>(args);
+    if(!ffmpeg->isPlaying){
+        return 0 ;
+    }
     ffmpeg->isPlaying = 0 ;
     //解决了：要保证_prepare方法执行完再释放的问题。
     // 假如是直播，这里可能阻塞住 int ret = avformat_open_input(&formatContext, dataSource, 0, &dictionary);
     pthread_join(ffmpeg->pid_prepare,0);
-
+    //
+    pthread_join(ffmpeg->pid_start,0);
     //要保证_prepare方法执行完再释放,所以上方用了pthread_join
     if(ffmpeg->formatContext){
         avformat_close_input(&ffmpeg->formatContext);
         avformat_free_context(ffmpeg->formatContext);
         ffmpeg->formatContext = 0 ;
     }
-    if(ffmpeg->videoChannel){
-        ffmpeg->videoChannel->stop();
-    }
-    if(ffmpeg->audioChannel){
-        ffmpeg->audioChannel->stop();
-    }
+//    if(ffmpeg->videoChannel){ //这里不需要。isplaying=0的时候会start循环结束，会被调用。
+//        ffmpeg->videoChannel->stop();
+//    }
+//    if(ffmpeg->audioChannel){
+//        ffmpeg->audioChannel->stop();
+//    }
     DELETE(ffmpeg->videoChannel);
     DELETE(ffmpeg->audioChannel);
-//    DELETE(ffmpeg);//TODO ??
+    DELETE(ffmpeg);
     return 0;
 }
 
@@ -176,37 +180,37 @@ void NEFFmpeg::start() {
  * 真正执行解码播放
  */
 void NEFFmpeg::_start() {
-    while(isPlaying){
+    while (isPlaying) {
         /**
          * 内存泄漏点1
          * 控制packets队列
          */
-        if(videoChannel && videoChannel->packets.size()> 100){
-            av_usleep(10*1000);     //睡眠十毫秒
+        if (videoChannel && videoChannel->packets.size() > 100) {
+            av_usleep(10 * 1000);     //睡眠十毫秒
             continue;
         }
-        if(audioChannel && audioChannel->packets.size() >100){
-            av_usleep(10*1000);
+        if (audioChannel && audioChannel->packets.size() > 100) {
+            av_usleep(10 * 1000);
             continue;
         }
         //7_1 给AVPacket分配内存空间
         AVPacket *packet = av_packet_alloc();
         //7_2 从媒体中读取音/视频报
-        int ret = av_read_frame(formatContext,packet);
-        if(!ret){
+        int ret = av_read_frame(formatContext, packet);
+        if (!ret) {
             //ret为0 表示成功
             //要判断流类型，是视频还是音频
-            if(videoChannel && packet->stream_index == videoChannel->id){
+            if (videoChannel && packet->stream_index == videoChannel->id) {
                 //往视频编码数据包队列中添加数据
                 videoChannel->packets.push(packet);
-            }else if(audioChannel && packet->stream_index == audioChannel->id) {
+            } else if (audioChannel && packet->stream_index == audioChannel->id) {
                 //往音频编码数据包队列中添加数据
                 audioChannel->packets.push(packet);
             }
-        }else if(ret == AVERROR_EOF){
+        } else if (ret == AVERROR_EOF) {
             //表示读完了
             //要考虑读完了，是否播放完的情况
-        }else{
+        } else {
             //LOGE("读取音视频数据包失败");
             LOGE("读取音视频数据包失败");
             if (javaCallHelper) {
@@ -216,8 +220,12 @@ void NEFFmpeg::_start() {
         }
     }//end while
     isPlaying = 0;
-    videoChannel->stop();
-    audioChannel->stop();
+    if (videoChannel) {
+        videoChannel->stop();
+    }
+    if(audioChannel) {
+        audioChannel->stop();
+    }
 }
 
 void NEFFmpeg::setRenderCallback(RenderCallback renderCallback) {

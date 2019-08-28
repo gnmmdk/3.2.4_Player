@@ -26,7 +26,6 @@ public class MainActivity extends AppCompatActivity {
         surfaceView = findViewById(R.id.surfaceView);
         seekBar = findViewById(R.id.seekBar);
 
-
         player = new NEPlayer();
         player.setSurfaceView(surfaceView);
 //        player.setDataSource(new File("/sdcard/","demo.mp4").getAbsolutePath());
@@ -62,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void onPrepare(View view) {
         if(player!=null) {
+
             player.prepare();
         }
     }
