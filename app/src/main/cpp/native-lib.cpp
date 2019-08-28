@@ -100,11 +100,20 @@ Java_com_kangjj_ndk_player_NEPlayer_releaseNative(JNIEnv *env, jobject instance)
     pthread_mutex_unlock(&mutex);
     DELETE(ffmpeg);
 
-}extern "C"
+}
+extern "C"
 JNIEXPORT void JNICALL
 Java_com_kangjj_ndk_player_NEPlayer_stopNative(JNIEnv *env, jobject instance) {
     if(ffmpeg){
         ffmpeg->stop();
     }
 
+}
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_kangjj_ndk_player_NEPlayer_getDurationNative(JNIEnv *env, jobject instance) {
+    if(ffmpeg){
+        return ffmpeg->getDuration();
+    }
+    return 0;
 }

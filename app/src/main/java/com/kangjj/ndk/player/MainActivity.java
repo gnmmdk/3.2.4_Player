@@ -2,6 +2,7 @@ package com.kangjj.ndk.player;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
@@ -17,6 +18,7 @@ public class MainActivity extends AppCompatActivity {
     private SeekBar seekBar;
     private boolean isTouch;
     private boolean isSeek;
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +36,15 @@ public class MainActivity extends AppCompatActivity {
         player.setOnPreparedListener(new NEPlayer.OnpreparedListener() {
             @Override
             public void onPrepared() {
+                int duration = player.getDuration();
+                if(duration!=0){
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            seekBar.setVisibility(View.VISIBLE);
+                        }
+                    });
+                }
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -42,6 +53,27 @@ public class MainActivity extends AppCompatActivity {
                 });
                 //播放，调用到native
                 player.start();
+            }
+        });
+        player.setOnProgressListener(new NEPlayer.OnProgressListener() {
+            @Override
+            public void onProgress(final int progress) {
+                Log.e(TAG,"progress="+progress);
+                if(!isTouch){
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            int duration = player.getDuration();
+                            if(duration!=0){
+                                if(isSeek){
+                                    isSeek = false;
+                                    return;
+                                }
+                                seekBar.setProgress(progress*100/duration);
+                            }
+                        }
+                    });
+                }
             }
         });
         player.setOnPlayerErrorListener(new NEPlayer.OnPlayerErrorListener() {

@@ -35,6 +35,8 @@ public:
 
     void stop();
 
+    int getDuration() const;
+
 private:
     JavaCallHelper *javaCallHelper = 0;
     AudioChannel *audioChannel = 0;
@@ -46,7 +48,7 @@ private:
     bool isPlaying;
     AVFormatContext *formatContext = 0;
     RenderCallback renderCallback;
-
+    int duration;
 };
 
 

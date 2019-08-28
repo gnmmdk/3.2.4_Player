@@ -43,7 +43,7 @@ void * task_stop(void* args){
     //解决了：要保证_prepare方法执行完再释放的问题。
     // 假如是直播，这里可能阻塞住 int ret = avformat_open_input(&formatContext, dataSource, 0, &dictionary);
     pthread_join(ffmpeg->pid_prepare,0);
-    //
+    //需要等待该线程循环结束：1、formatContext在线程有使用到 2、videoChannel->stop 和audioChannel->stop 需要执行完
     pthread_join(ffmpeg->pid_start,0);
     //要保证_prepare方法执行完再释放,所以上方用了pthread_join
     if(ffmpeg->formatContext){
@@ -89,6 +89,7 @@ void NEFFmpeg::_prepare() {
         }
         return;
     }
+    duration = formatContext->duration / AV_TIME_BASE;
     //这里的i是后面的packet->stream_index
     for (int i = 0; i < formatContext->nb_streams; ++i) {
         //3_1 获取流媒体（音频或者视频）
@@ -134,12 +135,12 @@ void NEFFmpeg::_prepare() {
         //判断流类型（音频还是视频？）
         if (codecParameters->codec_type == AVMEDIA_TYPE_AUDIO) {
             //音频
-            audioChannel = new AudioChannel(i,codecContext,time_base);
+            audioChannel = new AudioChannel(i,codecContext,time_base,javaCallHelper);
         } else if (codecParameters->codec_type == AVMEDIA_TYPE_VIDEO) {
             //视频
             AVRational frame_rate = stream-> avg_frame_rate;//TODO  看视频
             int fps = av_q2d(frame_rate);
-            videoChannel = new VideoChannel(i,codecContext,time_base,fps);
+            videoChannel = new VideoChannel(i,codecContext,time_base,javaCallHelper,fps);
             videoChannel->setRenderCallback(renderCallback);
         }
     }//end for
@@ -240,4 +241,8 @@ void NEFFmpeg::stop() {
 //    pthread_join(pid_prepare, 0);//解决了：要保证_prepare方法（子线程中）执行完再释放（在主线程）的问题
     //在主线程会引发ANR，那么到子线程中去释放
     pthread_create(&pid_stop,0,task_stop,this);
+}
+
+int NEFFmpeg::getDuration() const{
+    return duration;
 }

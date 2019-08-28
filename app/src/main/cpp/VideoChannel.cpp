@@ -34,7 +34,7 @@ void dropAVFrame(queue<AVFrame *> &q){
         q.pop();
     }
 }
-VideoChannel::VideoChannel(int id,AVCodecContext* codecContext,AVRational time_base,int fps):BaseChannel(id,codecContext,time_base) {
+VideoChannel::VideoChannel(int id,AVCodecContext* codecContext,AVRational time_base,JavaCallHelper* javaCallHelper,int fps):BaseChannel(id,codecContext,time_base,javaCallHelper) {
     this->fps = fps;
     packets.setSyncHandle(dropAVPakcet);
     frames.setSyncHandle(dropAVFrame);
@@ -168,6 +168,9 @@ void VideoChannel::video_play() {
         if(!audioChannel){
             //没有音频（类似GIF）
             av_usleep(real_delay * 1000000);
+            if(javaCallHelper){
+                javaCallHelper->onProgress(THREAD_CHILD,video_time);
+            }
         } else{
             double audioTime = audioChannel->audio_time;
             //音视频时间差

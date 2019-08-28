@@ -88,6 +88,14 @@ public class NEPlayer {
         stopNative();
     }
 
+
+    public int getDuration() {
+        return getDurationNative();
+    }
+
+    private native int getDurationNative();
+
+
     private native void stopNative();
 
     private native void startNative();
@@ -103,6 +111,10 @@ public class NEPlayer {
         this.mOnpreparedListener = onpreparedListener;
     }
 
+    public void setOnProgressListener(OnProgressListener onProgressListener){
+        this.mOnProgressListener = onProgressListener;
+    }
+
     public void setOnPlayerErrorListener(OnPlayerErrorListener onPlayerErrorListener){
         this.mOnPlayerErrorListener = onPlayerErrorListener;
     }
@@ -114,6 +126,12 @@ public class NEPlayer {
     public void onPrepared(){
         if(mOnpreparedListener!=null){
             mOnpreparedListener.onPrepared();
+        }
+    }
+
+    public void onProgress(int progress){
+        if(null != mOnProgressListener){
+            mOnProgressListener.onProgress(progress);
         }
     }
 
@@ -132,11 +150,16 @@ public class NEPlayer {
         void onPrepared();
     }
 
+    interface OnProgressListener{
+        void onProgress(int progress);
+    }
+
     interface OnPlayerErrorListener{
         void onError(int errCode);
     }
 
     private OnpreparedListener mOnpreparedListener;
+    private OnProgressListener mOnProgressListener;
     private OnPlayerErrorListener mOnPlayerErrorListener;
     /****************************native回调******************************/
 }

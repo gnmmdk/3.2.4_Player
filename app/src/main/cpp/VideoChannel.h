@@ -18,7 +18,7 @@ typedef void (*RenderCallback)(uint8_t *,int,int,int);
 
 class VideoChannel : public BaseChannel{
 public:
-    VideoChannel(int id,AVCodecContext *codecContext,AVRational time_base,int fps);
+    VideoChannel(int id,AVCodecContext *codecContext,AVRational time_base,JavaCallHelper* javaCallHelper,int fps);
 
     ~VideoChannel();
 
