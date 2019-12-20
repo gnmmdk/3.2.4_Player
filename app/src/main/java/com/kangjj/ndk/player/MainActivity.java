@@ -31,7 +31,9 @@ public class MainActivity extends AppCompatActivity {
         player = new NEPlayer();
         player.setSurfaceView(surfaceView);
 //        player.setDataSource(new File("/sdcard/","demo.mp4").getAbsolutePath());
-        player.setDataSource(new File("/sdcard/","input.mp4").getAbsolutePath());
+        player.setDataSource(new File("/sdcard/","input.mp4").getAbsolutePath());//todo 网络的话 ffmpeg要支持rtmp 重新编译 就可以播放视频了
+
+
 //        player.setDataSource(new File("/sdcard/","eat.mkv").getAbsolutePath());
         player.setOnPreparedListener(new NEPlayer.OnpreparedListener() {
             @Override

@@ -21,7 +21,7 @@ NEFFmpeg::~NEFFmpeg() {
     DELETE(javaCallHelper);
     pthread_mutex_destroy(&seekMutex);
 }
-
+// todo A.3 为了获取到地址dataSourceffmpeg->_prepare();
 void *task_prepare(void *args) {
     //打开输入 这里的args对应到pthread_create(&pid_prepare,0,task_prepare,this);的第四个参数（this）
     NEFFmpeg *ffmpeg = static_cast<NEFFmpeg *>(args);
@@ -65,6 +65,7 @@ void * task_stop(void* args){
     return 0;
 }
 
+// todo B 内容：3.2.2FFmpeg播放器视频播放（无声）  1、JNI反射Java方法 2、FFmpeg的准备流程 3、视频解码与播放
 void NEFFmpeg::_prepare() {
     //0.5 AVFormatContext **ps
     formatContext = avformat_alloc_context();
@@ -161,7 +162,7 @@ void NEFFmpeg::_prepare() {
 }
 
 /*
- * 播放准备
+ * todo A.2  播放准备 放在子线程 pthread_create第四个函数传this进来为了获取地址
  */
 void NEFFmpeg::prepare() {
     //pthread_create :创建子线程

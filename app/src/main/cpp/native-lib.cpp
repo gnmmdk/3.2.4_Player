@@ -50,7 +50,7 @@ void readerFrame(uint8_t * src_data,int src_linesize,int width,int height){
     ANativeWindow_unlockAndPost(window);
     pthread_mutex_unlock(&mutex);
 }
-
+//todo A.1 传递地址进来进行，FFmpeg进行准备动作以及设置RenderCallback
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_kangjj_ndk_player_NEPlayer_prepareNative(JNIEnv *env, jobject instance,

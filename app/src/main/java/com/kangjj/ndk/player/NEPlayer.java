@@ -3,7 +3,15 @@ package com.kangjj.ndk.player;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-
+/**
+  * @Description:    todo A FFmepg框架搭建 :根据资料里面的“FFmpeg工程c++核心类图.png”搭建框架:NEFFmpeg、VideoChannel、AudioChannel、BaseChannel、JavaCallHelper
+ *                   todo A CMakeList里面的tip
+  * @Author:         jj.kang
+  * @Email:          jj.kang@zkteco.com
+  * @ProjectName:
+  * @Package:        com.kangjj.ndk.player
+  * @CreateDate:     2019/12/20 15:34
+ */
 public class NEPlayer {
     static{
         System.loadLibrary("kjjPlayer");
