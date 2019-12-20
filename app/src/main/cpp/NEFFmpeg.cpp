@@ -65,7 +65,7 @@ void * task_stop(void* args){
     return 0;
 }
 
-// todo B 内容：3.2.2FFmpeg播放器视频播放（无声）  1、JNI反射Java方法 2、FFmpeg的准备流程 3、视频解码与播放
+// todo B 内容：FFmpeg播放器视频播放（无声）  1、JNI反射Java方法 2、FFmpeg的准备流程 3、视频解码与播放
 void NEFFmpeg::_prepare() {
     //0.5 AVFormatContext **ps
     formatContext = avformat_alloc_context();
