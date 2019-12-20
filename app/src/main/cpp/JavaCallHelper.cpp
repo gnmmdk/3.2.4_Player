@@ -6,7 +6,7 @@
 JavaCallHelper::JavaCallHelper(JavaVM *javaVM_, JNIEnv *env_, jobject instance_) {
     this->javaVM = javaVM_;
     this->env = env_;
-    //一旦涉及到jobject跨方法、线程、需要创建全局引用
+    //todo 一旦涉及到jobject跨方法、线程、需要创建全局引用
 //    this->instance = instance_;//不能直接复制！
     this->instance = env->NewGlobalRef(instance_);
     jclass clazz =env->GetObjectClass(instance);
@@ -27,10 +27,10 @@ void JavaCallHelper::onPrepared(int threadMode) {
         //主线程
         env->CallVoidMethod(instance,jmd_prepared);
     }else{
-        JNIEnv * env_child;
-        javaVM->AttachCurrentThread(&env_child,0);
+        JNIEnv * env_child;                     //todo 子线程用自定义的JNIEnv
+        javaVM->AttachCurrentThread(&env_child,0);//todo 子线程需要包裹起来
         env_child->CallVoidMethod(instance,jmd_prepared);
-        javaVM->DetachCurrentThread();
+        javaVM->DetachCurrentThread();//todo 子线程需要包裹起来
     }
 }
 
