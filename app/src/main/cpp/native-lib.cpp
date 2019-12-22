@@ -24,14 +24,14 @@ jint JNI_OnLoad(JavaVM *vm,void * reserved){
     javaVM = vm;
     return JNI_VERSION_1_4;
 }
-
+//todo C.2.3 使用ANativeWindow进行播放
 void readerFrame(uint8_t * src_data,int src_linesize,int width,int height){
     pthread_mutex_lock(&mutex);
     if(!window){
         pthread_mutex_unlock(&mutex);
         return;
     }
-    //设置窗口属性
+    //todo C.2.3.2 设置窗口属性
     ANativeWindow_setBuffersGeometry(window,width,height,WINDOW_FORMAT_RGBA_8888);
     ANativeWindow_Buffer window_buffer;
     if(ANativeWindow_lock(window, &window_buffer,0)){
@@ -43,7 +43,7 @@ void readerFrame(uint8_t * src_data,int src_linesize,int width,int height){
     //把buffer中的数据进行赋值 //填充rgb数据给dst_data
     uint8_t * dst_data = static_cast<uint8_t *>(window_buffer.bits);
     int dst_linesize = window_buffer.stride * 4; //ARGB
-    //逐行拷贝
+    //todo C.2.3.3 逐行拷贝
     for (int i = 0; i < window_buffer.height; ++i) {
         memcpy(dst_data + i* dst_linesize, src_data + i * src_linesize,dst_linesize);
     }
@@ -64,6 +64,8 @@ Java_com_kangjj_ndk_player_NEPlayer_prepareNative(JNIEnv *env, jobject instance,
 
     env->ReleaseStringUTFChars(dataSource_, dataSource);
 }
+
+//todo 为什么有时候是jobject，有时候是jclass ?private native void startNative()对应jobject。 private static native void startNative()对应jclass
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_kangjj_ndk_player_NEPlayer_startNative(JNIEnv *env, jobject instance) {
@@ -72,6 +74,7 @@ Java_com_kangjj_ndk_player_NEPlayer_startNative(JNIEnv *env, jobject instance) {
     }
 
 }
+
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_kangjj_ndk_player_NEPlayer_setSurfaceNative(JNIEnv *env, jobject instance,
@@ -82,7 +85,12 @@ Java_com_kangjj_ndk_player_NEPlayer_setSurfaceNative(JNIEnv *env, jobject instan
         ANativeWindow_release(window);
         window = 0;
     }
-    //创建新的窗口窗口用于视频显示
+    //todo C.2.3.1 创建新的窗口窗口用于视频显示（ANativeWindow）
+    /**
+        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+            setSurfaceNative(holder.getSurface());
+        }
+     */
     window = ANativeWindow_fromSurface(env,surface);
 
     pthread_mutex_unlock(&mutex);
@@ -91,7 +99,7 @@ Java_com_kangjj_ndk_player_NEPlayer_setSurfaceNative(JNIEnv *env, jobject instan
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_kangjj_ndk_player_NEPlayer_releaseNative(JNIEnv *env, jobject instance) {
-
+    //todo F.1 释放
     pthread_mutex_lock(&mutex);
     if(window){
         ANativeWindow_release(window);
@@ -104,6 +112,8 @@ Java_com_kangjj_ndk_player_NEPlayer_releaseNative(JNIEnv *env, jobject instance)
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_kangjj_ndk_player_NEPlayer_stopNative(JNIEnv *env, jobject instance) {
+    //todo F 停止与释放，seekbar功能
+    //todo F.2 停止播放
     if(ffmpeg){
         ffmpeg->stop();
     }

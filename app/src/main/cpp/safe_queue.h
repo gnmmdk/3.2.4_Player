@@ -10,15 +10,15 @@
 #include <pthread.h>
 
 using namespace std;
-
-template <typename T>
+//todo  理解这个类
+template <typename T>//todo  类似java的泛型
 class SafeQueue{
-    typedef void(*ReleaseCallback)(T*);
+    typedef void(*ReleaseCallback)(T*);     //todo 回掉接口 类似java的指针
     typedef void(*SyncHandle)(queue<T> &);
 public:
     SafeQueue(){
-        pthread_mutex_init(&mutex,0);//动态初始化
-        pthread_cond_init(&cond,0);
+        pthread_mutex_init(&mutex,0);//todo 锁 动态初始化
+        pthread_cond_init(&cond,0);//todo 锁
     }
     ~SafeQueue(){
         pthread_mutex_destroy(&mutex);

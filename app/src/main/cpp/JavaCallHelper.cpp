@@ -6,11 +6,11 @@
 JavaCallHelper::JavaCallHelper(JavaVM *javaVM_, JNIEnv *env_, jobject instance_) {
     this->javaVM = javaVM_;
     this->env = env_;
-    //todo 一旦涉及到jobject跨方法、线程、需要创建全局引用
 //    this->instance = instance_;//不能直接复制！
+    //todo 一旦涉及到jobject跨方法、线程、需要创建全局引用
     this->instance = env->NewGlobalRef(instance_);
     jclass clazz =env->GetObjectClass(instance);
-    //（）V 括号里面是传参数 V是返回值Void
+    //todo（）V 括号里面是传参数 V是返回值Void
     jmd_prepared = env->GetMethodID(clazz,"onPrepared","()V");
     jmd_error = env->GetMethodID(clazz,"onError","(I)V");
     jmd_progress = env->GetMethodID(clazz,"onProgress","(I)V");

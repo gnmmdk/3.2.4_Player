@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(),"开始播放！", Toast.LENGTH_SHORT).show();
                     }
                 });
-                //播放，调用到native
+                //todo B.9 播放，调用到native
                 player.start();
             }
         });

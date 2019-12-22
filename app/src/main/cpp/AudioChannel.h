@@ -8,6 +8,7 @@
 #include "BaseChannel.h"
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
+#include "macro.h"
 extern "C"{
 #include <libswresample/swresample.h>
 };

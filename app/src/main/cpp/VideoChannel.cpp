@@ -6,7 +6,7 @@
 #include "VideoChannel.h"
 
 /**
- * 丢包AVPacket
+ *  //todo E.4.3.1 二选一 丢包AVPacket
  * @param q
  */
 void dropAVPakcet(queue<AVPacket *> &q){
@@ -24,7 +24,7 @@ void dropAVPakcet(queue<AVPacket *> &q){
 }
 
 /**
- * 丢包AVFrame
+ * //todo E.4.3.2 二选一 丢包AVFrame
  * @param q
  */
 void dropAVFrame(queue<AVFrame *> &q){
@@ -77,14 +77,14 @@ void VideoChannel::stop() {
 }
 
 /**
- * 真正的视频解码
+ *  //todo C.1 真正的视频解码
  */
 void VideoChannel::video_decode() {
     AVPacket* packet=0;
     while(isPlaying){
-        //8 获取AVPacket
+        // todo C.1.1 获取AVPacket
         int ret = packets.pop(packet);
-        if(!isPlaying){
+        if(!isPlaying){//这里判断也是因为pop里面可能堵塞住
             //如果停止播放了，跳出循环 释放packet
             break;
         }
@@ -92,7 +92,7 @@ void VideoChannel::video_decode() {
             //取数据包失败
             continue;
         }
-        // 9 拿到视频数据包（编码压缩了的），需要把数据包给解码器进行解码
+        // todo C.1.2 拿到视频数据包（编码压缩了的），需要把数据包给解码器进行解码
         ret = avcodec_send_packet(codecContext,packet);
         if(ret){
             //往解码器发送数据包失败，跳出循环
@@ -100,7 +100,7 @@ void VideoChannel::video_decode() {
         }
         releaseAVPacket(&packet);
         AVFrame* frame =av_frame_alloc();
-        //10 从解码器中获取音/视频原始数据包
+        // todo C.1.3 从解码器中获取音/视频原始数据包
         ret = avcodec_receive_frame(codecContext, frame);
         if(ret == AVERROR(EAGAIN)){
             continue;
@@ -108,13 +108,15 @@ void VideoChannel::video_decode() {
             break;
         }
         /**
-         * 内存泄露点2
+         * //todo D 内存泄露点3
          * 控制 frames 队列
          */
         while(isPlaying && frames.size()>100){
             av_usleep(10*1000);
             continue;
         }
+        //todo 生产者（frames.push(frame)）-消费者（video_play 方法里面的 frames.pop）
+        // todo C.1.4 放入到Frame队列中，格式是YUV，后续需要转成ARGB
         //ret==0 数据收发正常，成功获取到解码后的视频原始数据包AVFrame，格式是yuv
         frames.push(frame);
     }
@@ -122,7 +124,7 @@ void VideoChannel::video_decode() {
 
 }
 /**
- * 真正的播放视频
+ * todo C.2 真正的播放视频
  */
 void VideoChannel::video_play() {
     AVFrame * frame = 0;
@@ -141,6 +143,7 @@ void VideoChannel::video_play() {
     //  给dst_data 和 dst_linesize 申请内存
     av_image_alloc(dst_data,dst_linesize,
             codecContext->width,codecContext->height,AV_PIX_FMT_RGBA,1);
+    //todo D 控制视频的播放速度 2
     //根据fps（传入流的的平均帧率来控制每一帧的延时时间）
     //sleep : fps > time(单位是秒)
     double delay_time_per_frame = 1.0/fps;
@@ -153,9 +156,10 @@ void VideoChannel::video_play() {
             //取数据包失败
             continue;
         }
-        //取到yuv原始数据包，下面要进行数据转换        dst_data:AV_PIX_FMT_RGBA格式里的数据
+        //todo C.2.1 取到yuv原始数据包，下面要进行数据转换（yuv转ARGB）        dst_data:AV_PIX_FMT_RGBA格式里的数据
         sws_scale(sws_context,frame->data,
                 frame->linesize,0,codecContext->height,dst_data,dst_linesize);
+        //todo D 控制视频的播放速度 3
         //进行休眠 每一帧还有自己的额外延时时间 （怎么获取额外延时时间公式? 点进去frame->repeat_pict看注释）
         double extra_delay = frame->repeat_pict / (2* fps);
         double real_delay = extra_delay+ delay_time_per_frame;
@@ -164,9 +168,10 @@ void VideoChannel::video_play() {
         //获取视频的播放时间
         double video_time = frame->best_effort_timestamp * av_q2d(time_base);
 
-        //音视频同步：永远都是你追我赶的状态。
+        //todo E.4 音视频同步：永远都是你追我赶的状态。
         if(!audioChannel){
-            //没有音频（类似GIF）
+            //todo E.4.1 没有音频（类似GIF）
+            //todo D 控制视频的播放速度 4
             av_usleep(real_delay * 1000000);
             if(javaCallHelper){
                 javaCallHelper->onProgress(THREAD_CHILD,video_time);
@@ -177,24 +182,25 @@ void VideoChannel::video_play() {
             double time_diff = video_time-audioTime;
             if(time_diff >0 ){
                 /*LOGE("视频比音频快:%lf",time_diff);*/
-                //视频比音频快：等音频（sleep）
+                //todo E.4.2 视频比音频快：等音频（sleep）
                 //自然状态下，time_diff的值不会很大
-                //但是，seek后time_diff的值可能会很大，导致视频休眠天就
+                //但是，seek后time_diff的值可能会很大，导致视频休眠太久
                 //av_usleep((real_delay + time_diff) * 1000000);//TODO seek后测试
-                if(time_diff >1){
+                if(time_diff >1){//todo E.4.2.1 seek往前拉后time_diff的值可能会很大，导致视频休眠太久，所以*2（也可以*1.8 *1.9） 慢慢追
                     av_usleep((real_delay * 2 ) * 1000000);
-                }else{
+                }else{              //todo E.4.2.2 自然状态下，time_diff的值不会很大
                     av_usleep((real_delay + time_diff) * 1000000);
                 }
             }else if(time_diff<0){
                 /*LOGE("音频比视频快: %lf", fabs(time_diff));//fabs绝对值*/
-                //音频比视频快：追音频（尝试丢视频包）
+                //todo E.4.3 音频比视频快：追音频（尝试丢视频包）
                 //视频包：packets和frames
                 if(fabs(time_diff)>=0.05){
                     //时间差如果大于0.05，有明显的延迟感
                     //丢包：要操作队列中数据！一定要小心！
-//                    packets.sync();
-                    frames.sync();
+                    // 两种方式都可以
+//                    packets.sync();       //执行上方的dropAVPakcet
+                    frames.sync();          //执行上方的dropAVFrame
                     continue;
                 }
 //                av_usleep(real_delay  * 1000000);
@@ -204,7 +210,7 @@ void VideoChannel::video_play() {
             }
         }
 
-
+        //todo C.2.2 回调到native-lib 使用ANativeWindow进行播放
         //渲染，回调回去 > native-lib
         //渲染一副图像需要什么信息：（宽高》图像的尺寸）（图像的内容（数据）怎么画）
         //需要：1 data 2 linesize 3 width 4 height
