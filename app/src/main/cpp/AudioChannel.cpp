@@ -122,7 +122,7 @@ void AudioChannel::audio_decode() {
             break;
         }
         /**
-    * todo D 内存泄漏点2
+    * //todo D 内存泄漏点2
     * 控制 frames 队列
     */
         while(isPlaying && frames.size() > 100){
@@ -144,7 +144,7 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context) {
         (*bq)->Enqueue(bq,audioChannel->out_buffers,pcm_size);
     }
 }
-//todo D.2 OpenSLES播放PCM
+//todo D.2 OpenSL ES播放PCM
 void AudioChannel::audio_play() {
     //todo D.2.1、创建引擎并获取引擎接口
     SLresult result;

@@ -10,7 +10,7 @@ NEFFmpeg::NEFFmpeg(JavaCallHelper *javaCallHelper, char *dataSource) {
 //    this->dataSource = dataSource;?
 
 //内存拷贝，自己管理它的内存，strlen获取字符串长度，strcpy:拷贝字符串
-//java:"hello" c字符串以\0 结尾:"hello\0"
+//todo java:"hello" c字符串以\0 结尾:"hello\0"
     this->dataSource = new char[strlen(dataSource) + 1];
     strcpy(this->dataSource, dataSource);
     pthread_mutex_init(&seekMutex,0);
@@ -186,7 +186,7 @@ void NEFFmpeg::start() {
     pthread_create(&pid_start,0,task_start,this);
 }
 /**
- * todo B.10 获取到AVPacket，然后放到队列中  视频解码有两个生产者、消费者，这里是第一个。生产者（videoChannel->packets.push(packet);）-消费者（video_decode）
+ * todo B.10 获取到AVPacket，然后放到队列中  音、视频解码有两个生产者、消费者，这里是第一个。生产者（videoChannel->packets.push(packet);）-消费者（video_decode）
  */
 void NEFFmpeg::_start() {
     while (isPlaying) {

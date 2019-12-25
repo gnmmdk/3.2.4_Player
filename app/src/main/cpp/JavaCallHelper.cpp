@@ -7,10 +7,10 @@ JavaCallHelper::JavaCallHelper(JavaVM *javaVM_, JNIEnv *env_, jobject instance_)
     this->javaVM = javaVM_;
     this->env = env_;
 //    this->instance = instance_;//不能直接复制！
-    //todo 一旦涉及到jobject跨方法、线程、需要创建全局引用
+    //todo B.8.1 一旦涉及到jobject跨方法、线程、需要创建全局引用
     this->instance = env->NewGlobalRef(instance_);
     jclass clazz =env->GetObjectClass(instance);
-    //todo（）V 括号里面是传参数 V是返回值Void
+    //todo B.8.2（）V 括号里面是传参数 V是返回值Void
     jmd_prepared = env->GetMethodID(clazz,"onPrepared","()V");
     jmd_error = env->GetMethodID(clazz,"onError","(I)V");
     jmd_progress = env->GetMethodID(clazz,"onProgress","(I)V");
@@ -27,10 +27,10 @@ void JavaCallHelper::onPrepared(int threadMode) {
         //主线程
         env->CallVoidMethod(instance,jmd_prepared);
     }else{
-        JNIEnv * env_child;                     //todo 子线程用自定义的JNIEnv
-        javaVM->AttachCurrentThread(&env_child,0);//todo 子线程需要包裹起来
+        JNIEnv * env_child;                     //todo B.8.3 子线程用自定义的JNIEnv
+        javaVM->AttachCurrentThread(&env_child,0);//todo B.8.4 子线程需要包裹起来
         env_child->CallVoidMethod(instance,jmd_prepared);
-        javaVM->DetachCurrentThread();//todo 子线程需要包裹起来
+        javaVM->DetachCurrentThread();//todo B.8.3 子线程需要包裹起来
     }
 }
 

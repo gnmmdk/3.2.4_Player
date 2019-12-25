@@ -186,7 +186,7 @@ void VideoChannel::video_play() {
                 //自然状态下，time_diff的值不会很大
                 //但是，seek后time_diff的值可能会很大，导致视频休眠太久
                 //av_usleep((real_delay + time_diff) * 1000000);//TODO seek后测试
-                if(time_diff >1){//todo E.4.2.1 seek往前拉后time_diff的值可能会很大，导致视频休眠太久，所以*2（也可以*1.8 *1.9） 慢慢追
+                if(time_diff >1){//todo E.4.2.1 seek往前拉后time_diff的值可能会很大，导致视频休眠太久，所以*2（也可以*1.8 *1.9） 慢慢追 real_delay的值很小
                     av_usleep((real_delay * 2 ) * 1000000);
                 }else{              //todo E.4.2.2 自然状态下，time_diff的值不会很大
                     av_usleep((real_delay + time_diff) * 1000000);

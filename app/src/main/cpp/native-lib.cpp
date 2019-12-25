@@ -47,6 +47,7 @@ void readerFrame(uint8_t * src_data,int src_linesize,int width,int height){
     for (int i = 0; i < window_buffer.height; ++i) {
         memcpy(dst_data + i* dst_linesize, src_data + i * src_linesize,dst_linesize);
     }
+    //todo C.2.3.4 通知AnativeWindow进行更新
     ANativeWindow_unlockAndPost(window);
     pthread_mutex_unlock(&mutex);
 }
